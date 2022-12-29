@@ -28,6 +28,7 @@ class _HomePageState extends State<HomePage> {
   String answer = '';
   bool isEqualToZero = false;
   bool isAnswered = true;
+  bool addAnswer = false;
   String wrong = "Wrong Input";
   String over = "Over the range";
   String big = "Too Big";
@@ -196,8 +197,13 @@ class _HomePageState extends State<HomePage> {
                                   var q = qa[0];
                                   var a = qa[1];
                                   setState(() {
-                                    userInput = q.substring(0, q.length - 1);
-                                    answer = a;
+                                    if (addAnswer) {
+                                      userInput = a.substring(1);
+                                    } else {
+                                      userInput = q.substring(0, q.length - 1);
+                                    }
+                                    // answer = a;
+                                    answer = "";
                                     isAnswered = false;
                                   });
                                 },
@@ -250,83 +256,172 @@ class _HomePageState extends State<HomePage> {
             ),
 
             // 입력, 계산결과
-            Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  // 입력
-                  Container(
-                    color: Colors.grey.shade800,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 0,
-                      horizontal: 0,
-                    ),
-                    alignment: Alignment.centerRight,
-                    child: Row(
-                      children: [
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.info_outlined),
-                          iconSize: 16,
-                          color: Colors.grey.shade600,
-                        ),
-                        Expanded(
-                          child: Text(
-                            // userInput == "" ? "_" : userInput,
-                            userInput == "" ? "_" : toMathExp(userInput),
-                            style: const TextStyle(
-                                fontSize: 18, color: Colors.white),
-                            textAlign: TextAlign.start,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () {
-                            setState(() {
-                              userInput =
-                                  userInput.substring(0, userInput.length - 1);
-                            });
-                          },
-                          icon: Icon(Icons.backspace_outlined,
-                              color: userInput == ""
-                                  ? Colors.grey.shade700
-                                  : Colors.grey.shade500),
-                          iconSize: 16,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // 계산결과
-                  Container(
-                    color: Colors.grey.shade900,
-                    padding: const EdgeInsets.fromLTRB(0, 0, 15, 0),
-                    alignment: Alignment.centerRight,
-                    child: Row(
-                      children: [
-                        Switch(
-                          value: isEqualToZero,
-                          onChanged: (value) {
-                            setState(() {
-                              isEqualToZero = value;
-                            });
-                          },
-                          activeTrackColor: Colors.orange.shade200,
-                          activeColor: Colors.orange,
-                        ),
-                        Expanded(
-                          child: Text(
-                            // answer,
-                            answerFormatted(answer),
-                            style: const TextStyle(
-                                fontSize: 30,
+            Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: <
+                Widget>[
+              // 입력
+              Container(
+                color: Colors.grey.shade800,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 0,
+                  horizontal: 0,
+                ),
+                alignment: Alignment.centerRight,
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: Colors.transparent,
+                          builder: (BuildContext context) {
+                            return Container(
+                              decoration: const BoxDecoration(
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.end,
-                          ),
-                        ),
-                      ],
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  topRight: Radius.circular(20),
+                                ),
+                              ),
+                              height: 150,
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 26),
+                                    const Text(
+                                        "     최대수: 999,999,999,999,999.9"),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: const [
+                                        Text("     소수점아래: 최대 9자리"),
+                                        Text("유효숫자: 최대 16     "),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        const SizedBox(width: 5),
+                                        Switch(
+                                          activeThumbImage: const AssetImage(
+                                              "assets/images/equal.png"),
+                                          value: false,
+                                          onChanged: (value) {},
+                                          activeTrackColor:
+                                              Colors.orange.shade200,
+                                          activeColor: Colors.orange.shade500,
+                                        ),
+                                        const Expanded(
+                                          child: Text(
+                                            "수식을 입력",
+                                            textAlign: TextAlign.start,
+                                          ),
+                                        ),
+                                        //   ],
+                                        // ),
+                                        // Row(
+                                        //   children: [
+                                        // const SizedBox(width: 5),
+                                        Switch(
+                                          activeThumbImage: const AssetImage(
+                                              "assets/images/equal.png"),
+                                          value: true,
+                                          onChanged: (value) {},
+                                          activeTrackColor:
+                                              Colors.orange.shade200,
+                                          activeColor: Colors.orange.shade500,
+                                        ),
+                                        const Expanded(
+                                          child: Text(
+                                            "계산결과를 입력",
+                                            textAlign: TextAlign.start,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    // ElevatedButton(
+                                    //   child: const Text('OK'),
+                                    //   onPressed: () => Navigator.pop(context),
+                                    // ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      icon: const Icon(Icons.info_outlined),
+                      iconSize: 16,
+                      color: Colors.grey.shade600,
                     ),
-                  )
-                ]),
+                    Expanded(
+                      child: Text(
+                        // userInput == "" ? "_" : userInput,
+                        userInput == "" ? "_" : toMathExp(userInput),
+                        style:
+                            const TextStyle(fontSize: 18, color: Colors.white),
+                        textAlign: TextAlign.start,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          userInput =
+                              userInput.substring(0, userInput.length - 1);
+                        });
+                      },
+                      icon: Icon(Icons.backspace_outlined,
+                          color: userInput == ""
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade500),
+                      iconSize: 16,
+                    ),
+                  ],
+                ),
+              ),
+
+              // 계산결과
+              Container(
+                color: Colors.grey.shade900,
+                padding: const EdgeInsets.fromLTRB(0, 0, 15, 0),
+                alignment: Alignment.centerRight,
+                child: Row(
+                  children: [
+                    const SizedBox(width: 5),
+                    Switch(
+                      activeThumbImage:
+                          const AssetImage("assets/images/equal.png"),
+                      // const NetworkImage(
+                      //     "https://cdn0.iconfinder.com/data/icons/mathematical-symbols-2-colored/640/cc_equal-512.png"),
+                      // value: isEqualToZero,
+                      value: addAnswer,
+                      onChanged: (value) {
+                        setState(() {
+                          // isEqualToZero = value;
+                          addAnswer = value;
+                        });
+                      },
+                      activeTrackColor: Colors.orange.shade200,
+                      activeColor: Colors.orange.shade500,
+                    ),
+                    Expanded(
+                      child: Text(
+                        // answer,
+                        answerFormatted(answer),
+                        style: const TextStyle(
+                            fontSize: 30,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            ]),
 
             // 키패드
             SizedBox(

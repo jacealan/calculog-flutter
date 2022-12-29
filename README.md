@@ -3,10 +3,21 @@
 ## Libraries
 
 - Flutter Launcher Icons: https://pub.dev/packages/flutter_launcher_icons
+- flutter_switch: https://pub.dev/packages/flutter_switch
+- custom_switch: https://pub.dev/packages/custom_switch
 
 ## Setup for Building
 
 /windows/runner/main.cpp
+
+## Build
+
+```shell
+flutter build windows
+# calculog\build\windows\runner\Release
+flutter build apk --release --target-platform=android-arm64
+# calculog\build\app\outputs\apk\release
+```
 
 ## References
 
