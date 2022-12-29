@@ -2,7 +2,6 @@ import 'package:calculog/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:math_expressions/math_expressions.dart';
-import 'package:intl/intl.dart';
 
 void main() {
   runApp(MyApp());
@@ -25,9 +24,16 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<String> log = [];
-  var userInput = '';
-  var answer = '';
+  String userInput = '';
+  String answer = '';
   bool isEqualToZero = false;
+  bool isAnswered = true;
+  String wrong = "Wrong Input";
+  String over = "Over the range";
+  String big = "Too Big";
+  String small = "Too small";
+  int significant = 15; // Max 999,999,999,999,999
+
   List<String> keypads = [
     "1",
     "2",
@@ -86,18 +92,24 @@ class _HomePageState extends State<HomePage> {
           if (event.isKeyPressed(LogicalKeyboardKey.escape)) {
             setState(() {
               userInput = '';
-              answer = '0';
+              answer = '';
+              isAnswered = true;
             });
             return;
           }
           if (event.isKeyPressed(LogicalKeyboardKey.backspace)) {
-            setState(() {
-              userInput = userInput.substring(0, userInput.length - 1);
-            });
+            if (userInput.isNotEmpty) {
+              setState(() {
+                userInput = userInput.substring(0, userInput.length - 1);
+                isAnswered = false;
+              });
+            }
             return;
           }
-          if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
+          if (event.isKeyPressed(LogicalKeyboardKey.enter) ||
+              event.character == "=") {
             setState(() {
+              isAnswered = false;
               equalPressed();
             });
             return;
@@ -106,10 +118,24 @@ class _HomePageState extends State<HomePage> {
           if (key != null &&
               buttons.contains(event.character) &&
               event.character != "C") {
-            setState(() {
-              userInput += key;
-            });
-            print(event.character);
+            if (isAnswered == true) {
+              if (["+", "-", "*", "/", "^"].contains(key)) {
+                setState(() {
+                  userInput = answer + key;
+                  isAnswered = false;
+                });
+              } else {
+                setState(() {
+                  userInput = key;
+                  isAnswered = false;
+                });
+              }
+            } else {
+              setState(() {
+                userInput += key;
+                isAnswered = false;
+              });
+            }
           }
           // LogicalKeyboardKey.bracketLeft [
           // LogicalKeyboardKey.parenthesisLeft (()
@@ -170,8 +196,9 @@ class _HomePageState extends State<HomePage> {
                                   var q = qa[0];
                                   var a = qa[1];
                                   setState(() {
-                                    userInput = q;
+                                    userInput = q.substring(0, q.length - 1);
                                     answer = a;
+                                    isAnswered = false;
                                   });
                                 },
                                 child: Text(
@@ -248,7 +275,7 @@ class _HomePageState extends State<HomePage> {
                             userInput == "" ? "_" : toMathExp(userInput),
                             style: const TextStyle(
                                 fontSize: 18, color: Colors.white),
-                            textAlign: TextAlign.end,
+                            textAlign: TextAlign.start,
                           ),
                         ),
                         IconButton(
@@ -287,7 +314,8 @@ class _HomePageState extends State<HomePage> {
                         ),
                         Expanded(
                           child: Text(
-                            answer,
+                            // answer,
+                            answerFormatted(answer),
                             style: const TextStyle(
                                 fontSize: 30,
                                 color: Colors.white,
@@ -316,12 +344,13 @@ class _HomePageState extends State<HomePage> {
                       buttontapped: () {
                         setState(() {
                           userInput = '';
-                          answer = '0';
+                          answer = '';
+                          isAnswered = true;
                         });
                       },
                       buttonText: buttons[index],
-                      color: Colors.blue[50],
-                      textColor: Colors.black,
+                      color: Colors.black, // Colors.blue[50],
+                      textColor: Colors.grey.shade400, //Colors.black,
                     );
                   }
 
@@ -368,12 +397,13 @@ class _HomePageState extends State<HomePage> {
                     return MyButton(
                       buttontapped: () {
                         setState(() {
+                          isAnswered = false;
                           equalPressed();
                         });
                       },
                       buttonText: buttons[index],
-                      color: Colors.orange[700],
-                      textColor: Colors.white,
+                      color: Colors.black, // Colors.orange[700],
+                      textColor: Colors.orange[700], // Colors.white,
                     );
                   }
 
@@ -381,17 +411,34 @@ class _HomePageState extends State<HomePage> {
                   else {
                     return MyButton(
                       buttontapped: () {
-                        setState(() {
-                          userInput += buttons[index];
-                        });
+                        if (isAnswered == true) {
+                          if (isOperator(buttons[index])) {
+                            setState(() {
+                              userInput = answer + buttons[index];
+                              isAnswered = false;
+                            });
+                          } else {
+                            setState(() {
+                              userInput = buttons[index];
+                              isAnswered = false;
+                            });
+                          }
+                        } else {
+                          setState(() {
+                            userInput += buttons[index];
+                            isAnswered = false;
+                          });
+                        }
                       },
                       buttonText: toMathExp(buttons[index]),
                       color: isOperator(buttons[index])
-                          ? Colors.blueAccent
-                          : Colors.white,
-                      textColor: isOperator(buttons[index])
-                          ? Colors.white
+                          ? Colors.black //Colors.blueAccent
                           : Colors.black,
+                      textColor: isOperator(buttons[index])
+                          // ? Colors.white
+                          // : Colors.black,
+                          ? Colors.blueAccent
+                          : Colors.grey.shade400,
                     );
                   }
                 },
@@ -416,7 +463,7 @@ class _HomePageState extends State<HomePage> {
       .replaceAll('*', '×')
       .replaceAll('/', '÷');
 
-// function to calculate the input operation
+  // function to calculate the input operation
   void equalPressed() {
     String finaluserinput = userInput;
     // finaluserinput = userInput.replaceAll('x', '*');
@@ -426,30 +473,97 @@ class _HomePageState extends State<HomePage> {
     try {
       exp = p.parse(finaluserinput);
     } catch (error) {
-      answer = "Wrong Input";
+      answer = wrong;
       return;
     }
     ContextModel cm = ContextModel();
     double eval = exp.evaluate(EvaluationType.REAL, cm);
     answer = double.parse(eval.toStringAsFixed(9)).toString();
     // answer = eval.toStringAsExponential();
+    if (answer.contains("e")) {
+      answer = over;
+      return;
+    }
     try {
       List<String> nums = answer.split(".");
+      if (nums[0][0] == "-" && nums[0].length > significant + 1) {
+        answer = over;
+        return;
+      }
+      if (nums[0][0] != "-" && nums[0].length > significant) {
+        answer = over;
+        return;
+      }
+
       if (nums.length == 2 && nums[1] == "0") {
         answer = nums[0];
       }
-    } catch (error) {}
+    } catch (error) {
+      if (answer[0] == "-" && answer.length > significant + 1) {
+        answer = over;
+        return;
+      }
+      if (answer[0] != "-" && answer.length > significant) {
+        answer = over;
+        return;
+      }
+    }
 
     log.add('$userInput = $answer');
 
-    userInput = answer;
+    // userInput = answer;
+    isAnswered = true;
 
     // NumberFormat myFormat = NumberFormat.decimalPattern('en_us');
-    NumberFormat myFormat = NumberFormat('###,###,###,###.##########');
-    answer = myFormat.format(double.parse(answer));
+    // NumberFormat myFormat = NumberFormat('###,###,###,###.##########');
+    // answer = myFormat.format(double.parse(answer));
     if (isEqualToZero) {
       userInput = "";
       answer = "";
     }
+  }
+
+  String answerFormatted(String number) {
+    if (number == "" || number == wrong || number == over) {
+      return number;
+    }
+
+    String beforeDot, afterDot;
+    try {
+      List<String> nums = number.split(".");
+      beforeDot = nums[0];
+      afterDot = nums[1];
+    } catch (error) {
+      beforeDot = number;
+      afterDot = "";
+    }
+
+    String formatted = "";
+    for (int i = 0; i < beforeDot.length; i++) {
+      // print(beforeDot[beforeDot.length - 1 - i]);
+      if (i % 3 == 0 &&
+          i > 0 &&
+          i < beforeDot.length - 1 &&
+          beforeDot[beforeDot.length - i - 1] != "-") {
+        formatted = ',$formatted';
+      }
+      formatted = '${beforeDot[beforeDot.length - 1 - i]}$formatted';
+    }
+    if (afterDot != "") {
+      formatted = '$formatted.$afterDot';
+    }
+    return formatted;
+
+    // Parser p = Parser();
+    // Expression exp = p.parse(number);
+    // ContextModel cm = ContextModel();
+    // double eval = exp.evaluate(EvaluationType.REAL, cm);
+    // print(eval);
+
+    // NumberFormat myFormat;
+    // myFormat = NumberFormat('###,###,###,###.##########');
+    // // return myFormat.format(double.parse(answer));
+    // return myFormat.format(eval);
+    // }
   }
 }
